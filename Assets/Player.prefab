@@ -1853,6 +1853,7 @@ GameObject:
   - component: {fileID: 3572904957788323718}
   - component: {fileID: 2338804941435932762}
   - component: {fileID: 8660002447182006939}
+  - component: {fileID: 178446426831677276}
   m_Layer: 0
   m_Name: Camera
   m_TagString: MainCamera
@@ -1998,6 +1999,19 @@ MonoBehaviour:
   camHolder: {fileID: 973824106906196586}
   orientation: {fileID: 8582882436040518014}
   cam: {fileID: 5353782283927841150}
+--- !u!114 &178446426831677276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6163775876261406784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d1fb344115c2bb499a5ca17a77b4d08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  camHolder: {fileID: 973824106906196586}
 --- !u!1 &6329800493030548241
 GameObject:
   m_ObjectHideFlags: 0
@@ -2179,6 +2193,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3221096358342160458}
   - component: {fileID: 9091006096245018243}
+  - component: {fileID: 4180739921431128691}
   m_Layer: 0
   m_Name: PlayerObj
   m_TagString: Untagged
@@ -2225,6 +2240,25 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4180739921431128691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6786264288457836001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5c6fc24de13184499a8aca55b7e084b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  animator: {fileID: 9091006096245018243}
+  pm: {fileID: 1905104169389727121}
+  acceleration: 3
+  deceleration: 3
+  maxWalkVelo: 0.5
+  maxRunVelo: 2
 --- !u!1 &6791084045977575151
 GameObject:
   m_ObjectHideFlags: 0
@@ -2679,8 +2713,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  currentMoveState:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 3
   characterController: {fileID: 3433496856216717507}
+  camLerp: {fileID: 178446426831677276}
   orientation: {fileID: 8582882436040518014}
+  crouchWalkSpeed: 0.7
+  crouchRunSpeed: 1.25
   walkSpeed: 2
   runSpeed: 5
   gravity: -9.81
@@ -2690,6 +2732,8 @@ MonoBehaviour:
   maxStamina: 100
   currentStamina: 100
   jumpPower: 1
+  crouchCameraLerpSpeed: 2
+  isExhausted: 0
 --- !u!143 &3433496856216717507
 CharacterController:
   m_ObjectHideFlags: 0

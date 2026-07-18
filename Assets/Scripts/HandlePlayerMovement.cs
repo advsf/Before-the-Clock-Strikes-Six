@@ -8,17 +8,21 @@ public class HandlePlayerMovement : NetworkBehaviour
     {
         Walking,
         Sprinting,
+        Crouching,
         OnAir,
         Idle
     }
 
-    public static NetworkVariable<MovementStates> currentMoveState = new(MovementStates.Idle, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<MovementStates> currentMoveState = new(MovementStates.Idle, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     [Header("References")]
     [SerializeField] private CharacterController characterController;
+    [SerializeField] private HandleCameraLerp camLerp;
     [SerializeField] private Transform orientation;
 
     [Header("Movement Settings")]
+    [SerializeField] private float crouchWalkSpeed;
+    [SerializeField] private float crouchRunSpeed;
     [SerializeField] private float walkSpeed;
     [SerializeField] private float runSpeed;
     [SerializeField] private float gravity;
@@ -33,11 +37,16 @@ public class HandlePlayerMovement : NetworkBehaviour
     [Header("Jump Setings")]
     [SerializeField] private float jumpPower = 2f;
 
+    [Header("Crouch Camera Settings")]
+    [SerializeField] private float crouchCameraLerpSpeed;
+    private Coroutine crouchCameraRoutine;
+
     private float verticalVelocity;
     private Vector2 moveDirection;
 
-    private bool isSprinting;
-    private bool isExhausted = false;
+    private bool isSprinting = false;
+    private bool isCrouching = false;
+    public bool isExhausted = false;
 
     private InputSystem_Actions action;
 
@@ -52,6 +61,7 @@ public class HandlePlayerMovement : NetworkBehaviour
             action.Player.Movement.Enable();
             action.Player.Sprint.Enable();
             action.Player.Jump.Enable();
+            action.Player.Crouch.Enable();
         }
     }
 
@@ -64,6 +74,7 @@ public class HandlePlayerMovement : NetworkBehaviour
             action.Player.Movement.Disable();
             action.Player.Sprint.Disable();
             action.Player.Jump.Disable();
+            action.Player.Crouch.Disable();
         }
     }
 
@@ -88,12 +99,20 @@ public class HandlePlayerMovement : NetworkBehaviour
         Vector3 move = orientation.right * moveDirection.x + orientation.forward * moveDirection.y;
 
         // set speed
-        float desiredSpeed = isSprinting && !isExhausted ? runSpeed : walkSpeed;
+        float desiredSpeed = GetDesiredMoveSpeed();
 
         // reset y velocity if grounded
         if (characterController.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
 
+        // crouching
+        if (action.Player.Crouch.IsPressed() && !isCrouching)
+            HandleCrouching();
+
+        else if (!action.Player.Crouch.IsPressed() && isCrouching)
+            GoBackToStandingAfterCrouching();
+
+        // jumping
         if (action.Player.Jump.triggered && characterController.isGrounded && !isExhausted)
             HandleJumping();
 
@@ -108,9 +127,40 @@ public class HandlePlayerMovement : NetworkBehaviour
         characterController.Move(Time.deltaTime * move);
     }
 
+    private float GetDesiredMoveSpeed()
+    {
+        if (currentMoveState.Value == MovementStates.Crouching)
+            return isSprinting && !isExhausted ? crouchRunSpeed : crouchWalkSpeed;
+
+        if (isSprinting && !isExhausted)
+            return runSpeed;
+
+        return walkSpeed;
+    }
+
     private void HandleJumping()
     {
         verticalVelocity = Mathf.Sqrt(jumpPower * -2f * gravity);
+    }
+
+    private void HandleCrouching()
+    {
+        isCrouching = true;
+
+        if (crouchCameraRoutine != null)
+            StopCoroutine(crouchCameraRoutine);
+
+        crouchCameraRoutine = StartCoroutine(camLerp.MoveCameraDownWhileCrouching(crouchCameraLerpSpeed));
+    }
+
+    private void GoBackToStandingAfterCrouching()
+    {
+        isCrouching = false;
+
+        if (crouchCameraRoutine != null)
+            StopCoroutine(crouchCameraRoutine);
+
+        crouchCameraRoutine = StartCoroutine(camLerp.MoveCameraUpWhileCrouching(crouchCameraLerpSpeed));
     }
 
     private void HandleStamina()
@@ -146,12 +196,17 @@ public class HandlePlayerMovement : NetworkBehaviour
 
     private void HandleMoveStates()
     {
-        if (moveDirection != Vector2.zero)
+        if (action.Player.Crouch.IsPressed())
+        {
+            currentMoveState.Value = MovementStates.Crouching;
+        }
+
+        else if (moveDirection != Vector2.zero)
         {
             currentMoveState.Value = isSprinting && !isExhausted ? MovementStates.Sprinting : MovementStates.Walking;
         }
 
-        else if (characterController.isGrounded)
+        else if (!characterController.isGrounded)
         {
             currentMoveState.Value = MovementStates.OnAir;
         }

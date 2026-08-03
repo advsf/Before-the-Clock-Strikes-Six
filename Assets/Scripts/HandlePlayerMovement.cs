@@ -165,7 +165,7 @@ public class HandlePlayerMovement : NetworkBehaviour
 
     private void HandleStamina()
     {
-        if (isSprinting && !isExhausted)
+        if (isSprinting && moveDirection != Vector2.zero && !isExhausted)
         {
             currentStamina -= staminaDecreaseAmount * Time.deltaTime;
         }
@@ -196,7 +196,12 @@ public class HandlePlayerMovement : NetworkBehaviour
 
     private void HandleMoveStates()
     {
-        if (action.Player.Crouch.IsPressed())
+        if (!characterController.isGrounded)
+        {
+            currentMoveState.Value = MovementStates.OnAir;
+        }
+
+        else if (action.Player.Crouch.IsPressed())
         {
             currentMoveState.Value = MovementStates.Crouching;
         }
@@ -204,11 +209,6 @@ public class HandlePlayerMovement : NetworkBehaviour
         else if (moveDirection != Vector2.zero)
         {
             currentMoveState.Value = isSprinting && !isExhausted ? MovementStates.Sprinting : MovementStates.Walking;
-        }
-
-        else if (!characterController.isGrounded)
-        {
-            currentMoveState.Value = MovementStates.OnAir;
         }
 
         else

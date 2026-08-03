@@ -21,9 +21,7 @@ public class HandlePlayerAnimations : NetworkBehaviour
     private int velocityXHash;
     private int velocityZHash;
 
-    private int jumpingHash;
-    private int slidingHash;
-
+    private int isOnAirHash;
     private int isCrouchingHash;
 
     private InputSystem_Actions actions;
@@ -36,6 +34,7 @@ public class HandlePlayerAnimations : NetworkBehaviour
         velocityXHash = Animator.StringToHash("Velocity X");
         velocityZHash = Animator.StringToHash("Velocity Z");
 
+        isOnAirHash = Animator.StringToHash("IsOnAir");
         isCrouchingHash = Animator.StringToHash("IsCrouching");
 
         actions = new InputSystem_Actions();
@@ -49,6 +48,8 @@ public class HandlePlayerAnimations : NetworkBehaviour
 
         bool isPlayerSprinting = pm.currentMoveState.Value == MovementStates.Sprinting && !pm.isExhausted;
         bool isPlayerCrouching = pm.currentMoveState.Value == MovementStates.Crouching;
+        bool isOnAir = pm.currentMoveState.Value == MovementStates.OnAir;
+
         float currentMaxVelo = isPlayerSprinting ? maxRunVelo : maxWalkVelo;
 
         Vector2 moveInput = actions.Player.Movement.ReadValue<Vector2>();
@@ -159,6 +160,8 @@ public class HandlePlayerAnimations : NetworkBehaviour
 
         animator.SetFloat(velocityXHash, velocityX);
         animator.SetFloat(velocityZHash, velocityZ);
+
         animator.SetBool(isCrouchingHash, isPlayerCrouching);
+        animator.SetBool(isOnAirHash, isOnAir);
     }
 }
